@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
+  Calendar,
   CalendarCheck2,
   Package,
   Image as ImageIcon,
@@ -65,13 +66,14 @@ export default function AdminLayout({
 
   const menuItems = [
     { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+    { name: 'Kalender Booking', href: '/admin/calendar', icon: Calendar },
+    { name: 'Daftar Booking', href: '/admin/bookings', icon: CalendarCheck2 },
     { name: 'Paket Fotografi', href: '/admin/packages', icon: Package },
     { name: 'Portfolio', href: '/admin/portfolio', icon: ImageIcon },
     { name: 'Testimoni Klien', href: '/admin/testimonials', icon: MessageSquareQuote },
     { name: 'Konten Homepage', href: '/admin/homepage', icon: FileEdit },
     { name: 'Informasi Brand', href: '/admin/brand', icon: Sparkles },
     { name: 'Kontak & Medsos', href: '/admin/contact', icon: PhoneCall },
-    { name: 'Daftar Booking', href: '/admin/bookings', icon: CalendarCheck2 },
     { name: 'Pengaturan Akun', href: '/admin/account', icon: ShieldCheck },
   ];
 

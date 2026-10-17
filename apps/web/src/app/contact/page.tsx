@@ -27,6 +27,7 @@ export const metadata: Metadata = {
 export default async function ContactPage() {
   const settings = await getSettings();
   const cleanPhone = settings.whatsappNumber.replace(/\D/g, '');
+  const displayPhone = cleanPhone.startsWith('62') ? '0' + cleanPhone.slice(2) : cleanPhone;
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FAF8F5]">
@@ -76,6 +77,9 @@ export default async function ContactPage() {
                   <p className="text-xs text-[#5A5854] mt-1">
                     Respon cepat dalam hitungan jam operasional untuk konsultasi jadwal, paket, dan arahan busana.
                   </p>
+                  <p className="font-mono text-sm font-semibold text-[#141414] mt-2">
+                    {displayPhone}
+                  </p>
                 </div>
                 <a
                   href={`https://wa.me/${cleanPhone}?text=Halo%20MOMEN.POTRAIT,%20saya%20ingin%20berkonsultasi%20seputar%20sesi%20fotografi`}
@@ -83,7 +87,7 @@ export default async function ContactPage() {
                   rel="noopener noreferrer"
                   className="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20ba59] text-white py-3 px-6 text-xs font-semibold uppercase tracking-wider transition-colors shadow-sm"
                 >
-                  <span>Chat di WhatsApp</span>
+                  <span>Chat di WhatsApp ({displayPhone})</span>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
               </div>

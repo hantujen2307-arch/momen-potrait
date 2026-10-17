@@ -111,15 +111,34 @@ model Booking {
   packageName     String
   shootDate       DateTime
   preferredTime   String
+  startTime       String?
+  endTime         String?
   location        String
   notes           String?       @db.Text
+  internalNotes   String?       @db.Text
   status          BookingStatus @default(PENDING)
   estimatedPrice  Int?
+  isManual        Boolean       @default(false)
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
   @@map("bookings")
 }
+
+model ScheduleBlock {
+  id          String   @id @default(uuid())
+  title       String   @default("Diblokir Studio")
+  blockDate   DateTime
+  isAllDay    Boolean  @default(true)
+  startTime   String?
+  endTime     String?
+  reason      String?  @db.Text
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("schedule_blocks")
+}
+
 
 model ContactSetting {
   id              String   @id @default(uuid())

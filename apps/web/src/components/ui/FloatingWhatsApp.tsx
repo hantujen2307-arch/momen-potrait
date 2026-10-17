@@ -10,7 +10,7 @@ interface FloatingWhatsAppProps {
 }
 
 export function FloatingWhatsApp({
-  whatsappNumber = '6281234567890',
+  whatsappNumber = '6285157335443',
   studioName = 'MOMEN.POTRAIT',
 }: FloatingWhatsAppProps) {
   const pathname = usePathname();

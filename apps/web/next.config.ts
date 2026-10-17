@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['192.168.1.5', 'localhost', '127.0.0.1'],
   images: {
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
@@ -25,6 +26,14 @@ const nextConfig: NextConfig = {
         as: "*.css",
       },
     },
+  },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${process.env.API_INTERNAL_URL || 'http://localhost:4000/api'}/:path*`,
+      },
+    ];
   },
 };
 

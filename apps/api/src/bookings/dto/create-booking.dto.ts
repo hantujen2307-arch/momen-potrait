@@ -34,5 +34,14 @@ export class CreateBookingDto {
   notes?: string;
 
   @IsOptional()
+  @IsString()
+  startTime?: string;
+
+  @IsOptional()
+  @IsString()
+  endTime?: string;
+
+  @IsOptional()
   estimatedPrice?: number;
 }
+

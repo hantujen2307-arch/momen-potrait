@@ -97,7 +97,7 @@ export default function AdminHomepageContentPage() {
     setUploading(true);
     setError(null);
     try {
-      const res = await uploadAdminFile(file);
+      const res = await uploadAdminFile(file, 'homepage');
       setHeroImageUrl(res.url);
     } catch (err: any) {
       setError(err.message || 'Gagal mengunggah foto');

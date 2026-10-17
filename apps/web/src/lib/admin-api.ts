@@ -1,6 +1,6 @@
 import { AdminMetrics, Booking, ContactSettings, PhotographyPackage, PhotographyService, PortfolioItem } from './api';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_BASE = typeof window !== 'undefined' ? '/api' : (process.env.API_INTERNAL_URL || 'http://localhost:4000/api');
 
 export function getAdminToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -138,10 +138,16 @@ export async function deleteAdminPackage(id: string): Promise<void> {
   if (!res.ok) throw new Error('Gagal menghapus paket');
 }
 
-export async function uploadAdminFile(file: File): Promise<{ url: string; filename: string }> {
+export async function uploadAdminFile(
+  file: File,
+  folder?: string,
+): Promise<{ url: string; secure_url?: string; public_id?: string; filename?: string }> {
   const token = getAdminToken();
   const formData = new FormData();
   formData.append('file', file);
+  if (folder) {
+    formData.append('folder', folder);
+  }
 
   const res = await fetch(`${API_BASE}/admin/upload`, {
     method: 'POST',
@@ -330,4 +336,200 @@ export async function deleteAdminTestimonial(id: string): Promise<void> {
     headers: authHeaders(),
   });
   if (!res.ok) throw new Error('Gagal menghapus testimoni');
+}
+
+// ==========================================
+// ADMIN CALENDAR TYPES & FUNCTIONS
+// ==========================================
+
+export interface AdminCalendarBooking {
+  id: string;
+  bookingCode: string;
+  customerName: string;
+  whatsappNumber: string;
+  serviceName: string;
+  packageName: string;
+  shootDate: string;
+  preferredTime: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  location: string;
+  notes?: string | null;
+  internalNotes?: string | null;
+  status: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+  estimatedPrice?: number | null;
+  isManual: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminScheduleBlock {
+  id: string;
+  title: string;
+  blockDate: string;
+  isAllDay: boolean;
+  startTime?: string | null;
+  endTime?: string | null;
+  reason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminCalendarMonthResponse {
+  year: number;
+  month: number;
+  bookings: AdminCalendarBooking[];
+  blocks: AdminScheduleBlock[];
+}
+
+export interface AdminCalendarDateSlot {
+  id: string;
+  startTime: string;
+  endTime: string;
+  label: string;
+  status: 'AVAILABLE' | 'CONFIRMED' | 'PENDING' | 'BLOCKED';
+  booking?: AdminCalendarBooking | null;
+  block?: AdminScheduleBlock | null;
+}
+
+export interface AdminCalendarDateResponse {
+  date: string;
+  isDateBlocked: boolean;
+  dayBlocks: AdminScheduleBlock[];
+  slots: AdminCalendarDateSlot[];
+  customBookings: AdminCalendarBooking[];
+}
+
+export interface CreateManualBookingDto {
+  customerName: string;
+  whatsappNumber: string;
+  serviceName: string;
+  packageName: string;
+  shootDate: string;
+  startTime: string;
+  endTime: string;
+  location: string;
+  notes?: string;
+  internalNotes?: string;
+  estimatedPrice?: number;
+  status?: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+}
+
+export interface UpdateManualBookingDto {
+  customerName?: string;
+  whatsappNumber?: string;
+  serviceName?: string;
+  packageName?: string;
+  shootDate?: string;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+  notes?: string;
+  internalNotes?: string;
+  estimatedPrice?: number;
+  status?: 'PENDING' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+}
+
+export interface CreateScheduleBlockDto {
+  title: string;
+  blockDate: string;
+  isAllDay?: boolean;
+  startTime?: string;
+  endTime?: string;
+  reason?: string;
+}
+
+export async function getAdminCalendarMonth(
+  year: number,
+  month: number,
+): Promise<AdminCalendarMonthResponse> {
+  const res = await fetch(`${API_BASE}/admin/calendar/month?year=${year}&month=${month}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Gagal mengambil data kalender bulan admin');
+  }
+  return res.json();
+}
+
+export async function getAdminCalendarDate(
+  dateStr: string,
+): Promise<AdminCalendarDateResponse> {
+  const res = await fetch(`${API_BASE}/admin/calendar/date?date=${dateStr}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Gagal mengambil detail jadwal tanggal');
+  }
+  return res.json();
+}
+
+export async function createAdminManualBooking(
+  data: CreateManualBookingDto,
+): Promise<AdminCalendarBooking> {
+  const res = await fetch(`${API_BASE}/admin/calendar/booking`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Gagal membuat booking manual');
+  }
+  return res.json();
+}
+
+export async function updateAdminManualBooking(
+  id: string,
+  data: UpdateManualBookingDto,
+): Promise<AdminCalendarBooking> {
+  const res = await fetch(`${API_BASE}/admin/calendar/booking/${id}`, {
+    method: 'PUT',
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Gagal memperbarui booking');
+  }
+  return res.json();
+}
+
+export async function createAdminScheduleBlock(
+  data: CreateScheduleBlockDto,
+): Promise<AdminScheduleBlock> {
+  const res = await fetch(`${API_BASE}/admin/calendar/block`, {
+    method: 'POST',
+    headers: authHeaders(),
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Gagal memblokir jadwal');
+  }
+  return res.json();
+}
+
+export async function deleteAdminScheduleBlock(id: string): Promise<void> {
+  const res = await fetch(`${API_BASE}/admin/calendar/block/${id}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Gagal menghapus blokir jadwal');
+  }
+}
+
+export async function getAdminScheduleBlocks(): Promise<AdminScheduleBlock[]> {
+  const res = await fetch(`${API_BASE}/admin/calendar/blocks`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Gagal mengambil daftar blokir jadwal');
+  }
+  return res.json();
 }

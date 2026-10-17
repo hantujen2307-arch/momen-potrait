@@ -9,7 +9,7 @@ interface NavbarProps {
   whatsappNumber?: string;
 }
 
-export function Navbar({ whatsappNumber = '6281234567890' }: NavbarProps) {
+export function Navbar({ whatsappNumber = '6285157335443' }: NavbarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const pathname = usePathname();

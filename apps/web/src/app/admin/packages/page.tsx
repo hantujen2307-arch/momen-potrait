@@ -204,7 +204,7 @@ export default function AdminPackagesPage() {
 
     setUploadingImage(true);
     try {
-      const res = await uploadAdminFile(file);
+      const res = await uploadAdminFile(file, 'packages');
       setCoverImageUrl(res.url);
     } catch (err: any) {
       alert(err.message || 'Gagal mengupload foto');

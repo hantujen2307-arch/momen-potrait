@@ -10,6 +10,7 @@ import { SettingsModule } from './settings/settings.module';
 import { AdminModule } from './admin/admin.module';
 import { ContentModule } from './content/content.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
+import { CalendarModule } from './calendar/calendar.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -26,6 +27,7 @@ import { AppService } from './app.service';
     AdminModule,
     ContentModule,
     TestimonialsModule,
+    CalendarModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -109,7 +109,7 @@ export default function AdminPortfolioPage() {
     if (!file) return;
     setUploading(true);
     try {
-      const res = await uploadAdminFile(file);
+      const res = await uploadAdminFile(file, 'portfolio');
       setImageUrl(res.url);
     } catch (err: any) {
       alert(err.message || 'Gagal mengunggah foto');

@@ -30,7 +30,7 @@ async function main() {
       data: {
         studioName: 'MOMEN.POTRAIT',
         tagline: 'Every Moment Tells a Story.',
-        whatsappNumber: '6281234567890',
+        whatsappNumber: '6285157335443',
         email: 'halo@momenpotrait.com',
         instagram: '@momen.potrait',
         serviceArea: 'Sesuai konfirmasi & kesepakatan pemesanan',

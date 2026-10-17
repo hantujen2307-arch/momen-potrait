@@ -26,7 +26,7 @@ export default function AdminSettingsPage() {
 
   const [studioName, setStudioName] = useState('MOMEN.POTRAIT');
   const [tagline, setTagline] = useState('Every Moment Tells a Story.');
-  const [whatsappNumber, setWhatsappNumber] = useState('6281234567890');
+  const [whatsappNumber, setWhatsappNumber] = useState('6285157335443');
   const [email, setEmail] = useState('halo@momenpotrait.com');
   const [instagram, setInstagram] = useState('@momen.potrait');
   const [serviceArea, setServiceArea] = useState('');
@@ -40,7 +40,7 @@ export default function AdminSettingsPage() {
       const data = await getAdminSettings();
       setStudioName(data.studioName || 'MOMEN.POTRAIT');
       setTagline(data.tagline || 'Every Moment Tells a Story.');
-      setWhatsappNumber(data.whatsappNumber || '6281234567890');
+      setWhatsappNumber(data.whatsappNumber || '6285157335443');
       setEmail(data.email || 'halo@momenpotrait.com');
       setInstagram(data.instagram || '@momen.potrait');
       setServiceArea(data.serviceArea || '');
@@ -175,7 +175,7 @@ export default function AdminSettingsPage() {
                 required
                 value={whatsappNumber}
                 onChange={(e) => setWhatsappNumber(e.target.value)}
-                placeholder="6281234567890"
+                placeholder="6285157335443"
                 className="w-full bg-[#111111] border border-[#2E2E2C] pl-10 pr-3 py-3 text-xs text-white focus:outline-none focus:border-[#C5A880] min-h-[44px]"
               />
             </div>

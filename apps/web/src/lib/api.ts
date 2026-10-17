@@ -134,14 +134,21 @@ export interface AdminMetrics {
   recentBookings: Booking[];
 }
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    return '/api';
+  }
+  return process.env.API_INTERNAL_URL || 'http://localhost:4000/api';
+}
+
+const API_BASE = typeof window !== 'undefined' ? '/api' : (process.env.API_INTERNAL_URL || 'http://localhost:4000/api');
 
 // Fallback data in case API is offline or during SSR
 export const FALLBACK_SETTINGS: ContactSettings = {
   id: 'default',
   studioName: 'MOMEN.POTRAIT',
   tagline: 'Every Moment Tells a Story.',
-  whatsappNumber: '6281234567890',
+  whatsappNumber: '6285157335443',
   email: 'halo@momenpotrait.com',
   instagram: '@momen.potrait',
   serviceArea: 'Sesuai konfirmasi & kesepakatan pemesanan',
@@ -669,6 +676,8 @@ export interface CreateBookingPayload {
   packageName: string;
   shootDate: string;
   preferredTime: string;
+  startTime?: string;
+  endTime?: string;
   location: string;
   notes?: string;
   estimatedPrice?: number;
@@ -690,15 +699,18 @@ export async function submitBooking(payload: CreateBookingPayload): Promise<Book
     });
 
     if (!res.ok) {
-      const errorData = await res.json();
+      const errorData = await res.json().catch(() => ({}));
       throw new Error(errorData.message || 'Gagal menyimpan booking');
     }
 
     return await res.json();
-  } catch {
+  } catch (err: any) {
+    if (err?.message && !err.message.includes('fetch')) {
+      throw err;
+    }
     // Generate graceful fallback WhatsApp link even if backend is offline
     const randomCode = `MP-${new Date().toISOString().slice(0, 10).replace(/-/g, '')}-${Math.floor(1000 + Math.random() * 9000)}`;
-    const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '6281234567890';
+    const phone = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '6285157335443';
     const messageLines = [
       `Halo *MOMEN.POTRAIT*, saya ingin reservasi sesi foto:`,
       ``,
@@ -736,5 +748,105 @@ export async function submitBooking(payload: CreateBookingPayload): Promise<Book
       whatsappUrl,
       message: 'Permintaan booking siap diteruskan ke WhatsApp tim MOMEN.POTRAIT.',
     };
+  }
+}
+
+// ==========================================
+// PUBLIC CALENDAR TYPES & FUNCTIONS
+// ==========================================
+
+export interface PublicCalendarDaySummary {
+  date: string;
+  dayOfWeek: number;
+  status: 'AVAILABLE' | 'PARTIAL' | 'CONFIRMED' | 'PENDING' | 'BLOCKED';
+  hasConfirmed: boolean;
+  hasPending: boolean;
+  isBlocked: boolean;
+  blockTitle?: string;
+  availableSlotsCount: number;
+  totalSlotsCount: number;
+}
+
+export interface PublicCalendarSlot {
+  id: string;
+  startTime: string;
+  endTime: string;
+  label: string;
+  status: 'AVAILABLE' | 'CONFIRMED' | 'PENDING' | 'BLOCKED';
+  isBookable: boolean;
+}
+
+export interface PublicCalendarDateDetails {
+  date: string;
+  isDateBlocked: boolean;
+  blockReason: string | null;
+  slots: PublicCalendarSlot[];
+}
+
+
+export async function getPublicCalendarMonth(
+  year: number,
+  month: number,
+): Promise<PublicCalendarDaySummary[]> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const base = getApiBaseUrl();
+    const res = await fetch(`${base}/calendar/month?year=${year}&month=${month}`, {
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || `Server mengembalikan status HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    if (!Array.isArray(data)) {
+      throw new Error('Format data kalender dari server tidak valid.');
+    }
+    return data;
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    console.error('Error fetching public calendar month:', error);
+    if (error.name === 'AbortError') {
+      throw new Error('Koneksi kalender ke server timeout (10 detik). Silakan coba lagi.');
+    }
+    throw error;
+  }
+}
+
+export async function getPublicCalendarDate(
+  dateStr: string,
+): Promise<PublicCalendarDateDetails | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+  try {
+    const base = getApiBaseUrl();
+    const res = await fetch(`${base}/calendar/date?date=${dateStr}`, {
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(errorData.message || `Server mengembalikan status HTTP ${res.status}`);
+    }
+
+    return await res.json();
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    console.error('Error fetching public calendar date slots:', error);
+    if (error.name === 'AbortError') {
+      throw new Error('Koneksi ketersediaan slot ke server timeout (10 detik). Silakan coba lagi.');
+    }
+    throw error;
   }
 }

@@ -19,7 +19,7 @@ export function Footer({
   brandName = 'MOMEN.POTRAIT',
   tagline = 'Every Moment Tells a Story.',
   footerText,
-  whatsappNumber = '6281234567890',
+  whatsappNumber = '6285157335443',
   email = 'halo@momenpotrait.com',
   instagram = '@momen.potrait',
   serviceArea = 'Sesuai konfirmasi & kesepakatan pemesanan',
@@ -27,6 +27,7 @@ export function Footer({
   operatingHours = 'Senin - Minggu: 08:30 - 20:30 WIB',
 }: FooterProps) {
   const cleanPhone = whatsappNumber.replace(/\D/g, '');
+  const displayPhone = cleanPhone.startsWith('62') ? '0' + cleanPhone.slice(2) : cleanPhone;
 
   return (
     <footer className="bg-[#111111] text-[#E5E2DC] pt-14 sm:pt-20 pb-12 border-t border-[#262624]">
@@ -174,7 +175,7 @@ export function Footer({
                   rel="noopener noreferrer"
                   className="hover:text-[#FAF8F5] transition-colors"
                 >
-                  +{cleanPhone}
+                  {displayPhone}
                 </a>
               </div>
             </div>

@@ -1,14 +1,16 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { BookingStatus, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateBookingDto } from './dto/create-booking.dto';
+import { CalendarService } from '../calendar/calendar.service';
 
 @Injectable()
 export class BookingsService {
   constructor(
     private prisma: PrismaService,
     private configService: ConfigService,
+    private calendarService: CalendarService,
   ) {}
 
   private generateBookingCode(): string {
@@ -21,6 +23,31 @@ export class BookingsService {
   }
 
   async create(dto: CreateBookingDto) {
+    // Extract or parse startTime & endTime
+    let startTime = dto.startTime;
+    let endTime = dto.endTime;
+    if (!startTime || !endTime) {
+      const match = dto.preferredTime.match(/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/);
+      if (match) {
+        startTime = match[1];
+        endTime = match[2];
+      }
+    }
+
+    // Check collision with confirmed bookings or studio blocks
+    if (startTime && endTime) {
+      const collision = await this.calendarService.checkCollision(
+        dto.shootDate,
+        startTime,
+        endTime,
+      );
+      if (collision.hasCollision) {
+        throw new ConflictException(
+          collision.reason || 'Slot waktu yang dipilih sudah tidak tersedia atau diblokir.',
+        );
+      }
+    }
+
     const bookingCode = this.generateBookingCode();
 
     const booking = await this.prisma.booking.create({
@@ -32,6 +59,8 @@ export class BookingsService {
         packageName: dto.packageName,
         shootDate: new Date(dto.shootDate),
         preferredTime: dto.preferredTime,
+        startTime: startTime || null,
+        endTime: endTime || null,
         location: dto.location.trim(),
         notes: dto.notes ? dto.notes.trim() : null,
         estimatedPrice: dto.estimatedPrice ? Number(dto.estimatedPrice) : null,
@@ -41,7 +70,7 @@ export class BookingsService {
 
     // Format WhatsApp message
     const settings = await this.prisma.contactSetting.findFirst();
-    const targetPhone = settings?.whatsappNumber || this.configService.get<string>('DEFAULT_WHATSAPP_NUMBER') || '6281234567890';
+    const targetPhone = settings?.whatsappNumber || this.configService.get<string>('DEFAULT_WHATSAPP_NUMBER') || '6285157335443';
 
     // Clean phone number: remove '+' or non-digit
     const cleanTargetPhone = targetPhone.replace(/\D/g, '');
@@ -146,7 +175,25 @@ export class BookingsService {
   }
 
   async updateStatus(id: string, status: BookingStatus) {
-    await this.findOne(id);
+    const booking = await this.findOne(id);
+    if (status === BookingStatus.CONFIRMED) {
+      const startTime = booking.startTime || '08:30';
+      const endTime = booking.endTime || '20:30';
+      const formatter = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' });
+      const dateStr = formatter.format(new Date(booking.shootDate));
+
+      const collision = await this.calendarService.checkCollision(
+        dateStr,
+        startTime,
+        endTime,
+        booking.id,
+      );
+      if (collision.hasCollision) {
+        throw new ConflictException(
+          `Gagal mengonfirmasi booking: ${collision.reason}`,
+        );
+      }
+    }
     return this.prisma.booking.update({
       where: { id },
       data: { status },
