@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model AdminUser {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  role         String   @default("ADMIN")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("admin_users")
+}
+
+model PhotographyService {
+  id          String   @id @default(uuid())
+  slug        String   @unique
+  name        String
+  tagline     String
+  shortDesc   String
+  description String   @db.Text
+  coverImage  String
+  features    Json?
+  idealFor    String?
+  active      Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  packages    PhotographyPackage[]
+
+  @@map("photography_services")
+}
+
+model PhotographyPackage {
+  id                          String   @id @default(uuid())
+  slug                        String   @unique
+  name                        String
+  tier                        String   // "Basic", "Signature", "Exclusive", "Custom"
+  category                    String   @default("General") // "Portrait", "Graduation", "Couple", "Prewedding", "Wedding", "Event", "Product", "General"
+  shortDesc                   String?  @db.Text
+  description                 String?  @db.Text
+  coverImageUrl               String   @default("https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1200&q=80")
+  galleryImages               Json?    // Array of additional photography URLs
+  price                       Int      // Stored as integer in IDR (e.g. 150000, 300000, 500000)
+  priceNote                   String   @default("Per sesi")
+  durationMinutes             Int      // Session duration in minutes (e.g. 30, 60, 120)
+  editedPhotoCount            Int      @default(5) // Number of edited photos (e.g. 5, 10, 20)
+  includesOriginalFiles       Boolean  @default(false)
+  originalFileDeliveryDetails String?  // Details on original file delivery
+  deliveryFormats             String   @default("JPEG Resolusi Tinggi")
+  outfitCount                 String?  @default("1-2 Outfit")
+  conceptCount                String?  @default("1 Konsep Terarah")
+  locationCount               String   @default("1 Lokasi")
+  deliveryEstimate            String   @default("5-7 hari kerja")
+  benefits                    Json     // Array of strings
+  terms                       String?  @db.Text
+  isPopular                   Boolean  @default(false)
+  isFeatured                  Boolean  @default(false)
+  badgeLabel                  String?  // e.g. "BEST SELLER", "PREMIUM", "POPULAR"
+  status                      String   @default("PUBLISHED") // "PUBLISHED", "DRAFT", "ARCHIVED"
+  active                      Boolean  @default(true)
+  sortOrder                   Int      @default(0)
+  displayOrder                Int      @default(0)
+  serviceId                   String?
+  service                     PhotographyService? @relation(fields: [serviceId], references: [id], onDelete: SetNull)
+  createdAt                   DateTime @default(now())
+  updatedAt                   DateTime @updatedAt
+
+  @@map("photography_packages")
+}
+
+model PortfolioItem {
+  id          String   @id @default(uuid())
+  title       String
+  category    String   // "Portrait", "Graduation", "Couple", "Prewedding", "Wedding", "Event", "Product"
+  imageUrl    String
+  description String?  @db.Text
+  clientName  String?
+  shootDate   String?
+  location    String?
+  isFeatured  Boolean  @default(false)
+  published   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("portfolio_items")
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  bookingCode     String        @unique
+  customerName    String
+  whatsappNumber  String
+  serviceName     String
+  packageName     String
+  shootDate       DateTime
+  preferredTime   String
+  location        String
+  notes           String?       @db.Text
+  status          BookingStatus @default(PENDING)
+  estimatedPrice  Int?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@map("bookings")
+}
+
+model ContactSetting {
+  id              String   @id @default(uuid())
+  studioName      String   @default("MOMEN.POTRAIT")
+  tagline         String   @default("Every Moment Tells a Story.")
+  whatsappNumber  String   @default("6281234567890")
+  email           String   @default("halo@momenpotrait.com")
+  instagram       String   @default("@momen.potrait")
+  serviceArea     String   @default("Konfirmasi area layanan bersama tim studio")
+  transportPolicy String?  @db.Text
+  operatingHours  String   @default("Senin - Minggu: 08:30 - 20:30 WIB")
+  bookingNotice   String?  @db.Text
+  updatedAt       DateTime @updatedAt
+
+  @@map("contact_settings")
+}
+
+model Testimonial {
+  id          String   @id @default(uuid())
+  clientName  String
+  reviewText  String   @db.Text
+  sessionType String?
+  avatarUrl   String?
+  isPublished Boolean  @default(false)
+  rating      Int?     @default(5)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("testimonials")
+}
+
+model HomepageContent {
+  id                    String   @id @default(uuid())
+  heroHeadline          String   @default("Every Moment Tells a Story.")
+  heroDescription       String   @db.Text @default("Fotografi potret editorial, wisuda, pasangan, dan momen berharga yang dikurasi secara artistik dengan pencahayaan sinematik dan arahan pose natural.")
+  heroImageUrl          String   @default("https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=1600&q=80")
+  heroPrimaryCtaText    String   @default("Booking Sekarang")
+  heroPrimaryCtaLink    String   @default("/booking")
+  heroSecondaryCtaText  String   @default("Lihat Paket")
+  heroSecondaryCtaLink  String   @default("/packages")
+  aboutTitle            String   @default("MOMEN.POTRAIT")
+  aboutTagline          String   @default("Setiap Bingkai Menyimpan Makna")
+  aboutDescription      String   @db.Text @default("Kami adalah studio fotografi kontemporer yang percaya bahwa keindahan visual terletak pada keaslian ekspresi. Tidak ada pose kaku atau manipulasi berlebihan — hanya Anda, cerita Anda, dan momen terbaik yang diabadikan dengan estetika abadi.")
+  ctaHeadline           String   @default("Siap Mengabadikan Momen Berharga Anda?")
+  ctaDescription        String   @db.Text @default("Konsultasikan konsep sesi pemotretan Anda bersama fotografer utama kami atau amankan tanggal pilihan Anda sekarang.")
+  ctaButtonText         String   @default("Reservasi Sesi Sekarang")
+  ctaButtonLink         String   @default("/booking")
+  faqItems              Json?    // Array of { question: string, answer: string }
+  footerText            String?  @default("Every Moment Tells a Story. Hak Cipta Dilindungi.")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@map("homepage_contents")
+}
