@@ -6,6 +6,8 @@
     "apps/*"
   ],
   "scripts": {
+    "postinstall": "npm --prefix apps/api run prisma:generate",
+    "prisma:generate": "npm --prefix apps/api run prisma:generate",
     "dev": "npm run dev:web",
     "dev:all": "npx concurrently -n \"API,WEB\" -c \"blue,green\" \"npm --prefix apps/api run start:dev\" \"npm --prefix apps/web run dev\"",
     "dev:web": "npm --prefix apps/web run dev",
